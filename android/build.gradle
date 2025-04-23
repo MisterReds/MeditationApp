@@ -1,0 +1,57 @@
+// /root/development/MeditationAppRN/android/build.gradle
+
+buildscript {
+    // Читаем версии из gradle.properties
+    ext.kotlin_version = project.properties['kotlinVersion'] ?: '1.8.22'
+    def agp_version = project.properties['agpVersion'] ?: '8.1.0'
+    // Читаем путь к Flutter SDK из local.properties (созданного ранее)
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('../local.properties') // Ищем в КОРНЕ проекта Flutter/RN
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
+    }
+    def flutterRoot = localProperties.getProperty('flutter.sdk')
+    if (flutterRoot == null) {
+        throw new GradleException("Flutter SDK not found in local.properties.")
+    }
+
+
+    repositories {
+        google()
+        mavenCentral()
+        // --- ДОБАВЛЯЕМ ЛОКАЛЬНЫЙ РЕПОЗИТОРИЙ FLUTTER ---
+        maven {
+            url "$flutterRoot/bin/cache/artifacts/engine/android-repository"
+        }
+        // -------------------------------------------
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // --- ЗАВИСИМОСТЬ ДЛЯ FLUTTER ПЛАГИНА ---
+        // Версия обычно не важна, берется из SDK
+        classpath 'dev.flutter.flutter-gradle-plugin:plugin:1.0.0'
+        // ------------------------------------
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // --- ДОБАВЛЯЕМ ЛОКАЛЬНЫЙ РЕПОЗИТОРИЙ FLUTTER ---
+        maven {
+            url "$flutterRoot/bin/cache/artifacts/engine/android-repository"
+        }
+        // -------------------------------------------
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

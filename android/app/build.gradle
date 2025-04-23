@@ -1,0 +1,85 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+// --- ПРИМЕНЯЕМ ПЛАГИН FLUTTER ЗДЕСЬ ---
+apply plugin: 'dev.flutter.flutter-gradle-plugin'
+// -------------------------------------
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('../local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode', '1')
+def flutterVersionName = localProperties.getProperty('flutter.versionName', '1.0')
+
+// --- ОПРЕДЕЛЯЕМ flutterExtension ПОСЛЕ ПРИМЕНЕНИЯ ПЛАГИНА ---
+def flutterExtension = project.extensions.findByType(io.flutter.gradle.FlutterExtension)
+// ----------------------------------------------------------
+
+android {
+    namespace "com.meditationapprn"
+
+    // --- ПЫТАЕМСЯ ЧИТАТЬ ИЗ flutterExtension, ЕСЛИ НЕТ - СТАВИМ ДЕФОЛТ ---
+    compileSdkVersion flutterExtension?.compileSdkVersion ?: 34
+    ndkVersion "27.0.12077973"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.meditationapprn"
+        minSdkVersion flutterExtension?.minSdkVersion ?: 21
+        targetSdkVersion flutterExtension?.targetSdkVersion ?: 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    signingConfigs {
+         debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+         }
+    }
+
+    buildTypes {
+        debug {
+             signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+         disable 'InvalidPackage'
+         checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version" // Использует kotlin_version из корневого build.gradle
+    implementation "com.facebook.react:react-android"
+}
+
+// Применяем React Native gradle скрипт
+def reactNativeDir = new File(rootProject.projectDir.parentFile, "node_modules/react-native")
+if (!reactNativeDir.exists()) {
+    throw new GradleException("Could not find react-native directory. Did you run npm install?")
+}
+apply from: new File(reactNativeDir, "react.gradle")

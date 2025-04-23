@@ -1,0 +1,31 @@
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("../local.properties").withInputStream { properties.load(it) }
+        def path = properties.getProperty("flutter.sdk")
+        assert path != null, "flutter.sdk not set in local.properties. Run 'flutter doctor'."
+        return path
+    }()
+
+    // --- ОСТАВЛЯЕМ includeBuild ---
+    includeBuild(new File(flutterSdkPath, "/packages/flutter_tools/gradle"))
+    // -----------------------------
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    // Объявляем стандартные плагины
+    id "com.android.application" version "8.1.0" apply false
+    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+    // НЕ ОБЪЯВЛЯЕМ Flutter здесь
+}
+
+include ':app'
+project(':app').projectDir = new File(settingsDir, 'app')
+
+// --- УБИРАЕМ ПОЛНОСТЬЮ БЛОК С apply from app_plugin_loader ---
